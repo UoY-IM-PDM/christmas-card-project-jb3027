@@ -1,43 +1,59 @@
-let elf, snow, snow0, snow1, snow2, snowman, ice, cane;
-let newGround, delay;
+let elf, snow, snowman, ice, cane;
+let newGround;
+let blockStop = [0, 0, 0, 0, 0];
 const BLOCK_SIZE = 50;
 const GAP = 500;
-
 
 function preload() {
     elf = loadImage("assets/elf.png");
     snow = loadImage("assets/snow.png");
-    snow0 = loadImage("assets/snow0.png");
-    snow1 = loadImage("assets/snow1.png");
-    snow2 = loadImage("assets/snow2.png");
     ice = loadImage("assets/ice.png");
     snowman = loadImage("assets/snowman.jpeg");
-    cane = loadImage("assets/cane.jpg");
+    cane = loadImage("assets/cane.png");
 }
 
 class Ground {
     #x;
+    #x1;
 
     constructor() {
-        this.#x = width;
+        this.#x = 300;
+        this.#x1 = 300;
     }
 
     draw() {
-        image(cane, 300, height - 2*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         for(let i = 0; i < width; i += BLOCK_SIZE) {
+            imageMode(CORNER);
             image(ice, i, height - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
-
-        image(snow0, this.#x, height - 3*BLOCK_SIZE, 4*BLOCK_SIZE, 2*BLOCK_SIZE);
-        image(snow1, this.#x + GAP, height - 3*BLOCK_SIZE, 3*BLOCK_SIZE, 2*BLOCK_SIZE);
-        let last = image(snow2, this.#x + (2*GAP), height - 3*BLOCK_SIZE, 2*BLOCK_SIZE, 2*BLOCK_SIZE);
+        imageMode(CENTER);
+        image(cane, this.#x, height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
+        image(cane, this.#x + GAP, height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
+        image(cane, this.#x + 1.5*GAP, height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
+        image(cane, this.#x + 2*GAP, height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
+        image(cane, this.#x1 + 2.5*GAP, height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
     }
 
     move() {
-        if(this.#x + (2*GAP) < -2*BLOCK_SIZE) {
+        if(this.#x + 2*GAP < -2*BLOCK_SIZE) {
             this.#x = width;
         }
+        if(this.#x1 + 3*GAP < -2*BLOCK_SIZE) {
+            this.#x1 = 300;
+        }
         this.#x--;
+        this.#x1--;
+    }
+
+    constraints() {
+        for(let i = 0; i < 5; i++) {
+            blockStop.pop();
+        }
+        blockStop.push(this.#x - (BLOCK_SIZE/2));
+        blockStop.push(this.#x + GAP - (BLOCK_SIZE/2));
+        blockStop.push(this.#x + GAP*1.5 - (BLOCK_SIZE/2));
+        blockStop.push(this.#x + GAP*2 - (BLOCK_SIZE/2));
+        blockStop.push(this.#x1 + GAP*2.5 - (BLOCK_SIZE/2));
     }
 
     getX() {
@@ -52,34 +68,38 @@ class Elf {
 
     constructor() {
         this.#x = 20;
-        this.#y = height - 3*BLOCK_SIZE;
+        this.#y = height - 2*BLOCK_SIZE;
     }
 
     draw() {
-        imageMode(CORNER);
+        imageMode(CENTER);
         image(elf, this.#x, this.#y, 2*BLOCK_SIZE, 2*BLOCK_SIZE);
     }
 
     move() {
-        if(keyIsDown(68)) {
-            this.#x++;
+        if(keyIsPressed) {
+            if(key === 'd') {
+                this.#x++;
+            }
         }
-        if(keyIsDown(65)) {
-            this.#x--;
+        if(keyIsPressed) {
+            if(key === 'a') {
+                this.#x--;
+            } 
         } 
     }
 
     jump() {
-        for(let i = 0; i < BLOCK_SIZE; i++) {
+        for(let i = 0; i < 1.5*BLOCK_SIZE; i++) {
             this.#y -= 1;
         }
         setTimeout(comeDown, 900);
     }
 
     down() {
-        for(let i = 0; this.#y < height - 3*BLOCK_SIZE; i++) {
-            this.#y++;
-        }
+        for(let i = 0; i < 1.5*BLOCK_SIZE; i++) {
+            this.#y++; 
+        }   
     }
 
     getY() {
@@ -101,8 +121,8 @@ function draw() {
     newElf.draw();
     newElf.move();
     newGround.move();
+    newGround.constraints();
 }
-
 
 function keyPressed() {
     if(key === 'w') {
@@ -111,5 +131,6 @@ function keyPressed() {
 }
 
 function comeDown() {
+    console.log("WORKING");
     newElf.down();
 }

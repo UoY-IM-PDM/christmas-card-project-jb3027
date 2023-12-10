@@ -81,7 +81,7 @@ class Elf {
             if(key === 'd') {
                 direction = 1;
                 if(this.#x < width - BLOCK_SIZE) {
-                    this.#x++;
+                    this.#x += 2;
                 }
             }
         }
@@ -89,7 +89,7 @@ class Elf {
             if(key === 'a') {
                 direction = -1;
                 if(this.#x > 0 + BLOCK_SIZE) {
-                    this.#x--;
+                    this.#x -= 2;
                 }
             } 
         } 
@@ -113,9 +113,8 @@ class Elf {
         let messageLength = newMessage.getMessageLength();
 
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2) {
-            setTimeout(nextConstrain, 200);
+            console.log("AH");
             //this.#letterCaught();
-
         }
     }
 
@@ -177,7 +176,16 @@ class Message {
      */
     move() {
         this.#y++;
-        //if(this.#y > height + BLOCK_SIZE);
+        
+        //THIS IS THE BIT THAT NEEDS FIXING SOMEHOW
+        // for(let i in this.#thisMessageY) {
+        //     if(this.#thisMessageY[i] > height + BLOCK_SIZE) {
+        //         current++;
+        //     }
+        // }
+        
+
+        console.log(current);
     }
 
     /**
@@ -252,7 +260,3 @@ function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
 }
 
-function nextConstrain() {
-    current++;
-    newElf.move();
-}

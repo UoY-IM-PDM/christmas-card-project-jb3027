@@ -1,8 +1,10 @@
 let elf, snow, snowman, ice, cane, xmasFont, direction;
 let levelSelect = 0;
+let score = 0;
 let gameOver = false;
 let jump = false;
 let messageX = [];
+let current = 0;
 
 const BLOCK_SIZE = 50;
 const GAP = 500;
@@ -74,8 +76,6 @@ class Elf {
         image(elf, this.#x, this.#y, 2*BLOCK_SIZE, 2*BLOCK_SIZE);
     }
 
-    
-
     move() {
         if(keyIsPressed) {
             if(key === 'd') {
@@ -108,7 +108,20 @@ class Elf {
             jump = false;
         }
 
+        let letterY = newMessage.getY();
+        let letterX = newMessage.getX();
+        let messageLength = newMessage.getMessageLength();
+
+        if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2) {
+            setTimeout(nextConstrain, 200);
+            //this.#letterCaught();
+
+        }
     }
+
+    // #letterCaught() {
+        
+    // }
 
     down() {
         for(let i = 0; i < 2*BLOCK_SIZE; i++) {
@@ -136,36 +149,27 @@ class Elf {
 
 class Message {
     #y;
-    #messageY;
+    #thisMessageY;
+    #thisMessageX;
     #messageChoice = ["Merry Christmas!"];
     #message;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
-        this.#messageY = [];
+        this.#thisMessageY = [];
+        this.#thisMessageX = [];
         this.#message = this.#messageChoice[levelSelect];
-    }
-
-    /**
-     * @returns {array} random number between BLOCK_SIZE and width - BLOCK_SIZE
-     */
-    #random() {
-        return random(BLOCK_SIZE, width - BLOCK_SIZE);
     }
 
     draw() {
         fill(255, 0, 0);
-        textFont(xmasFont);
-        textAlign(CENTER);
-        textSize(75);
         let message = this.#message;
-
-        
 
         for(let i = 0; i < message.length; i++) {
             text(this.#message[i], messageX[i], this.#y - (GAP*i));
-            this.#messageY.push(this.#y - (GAP*i));
-        }
+            this.#thisMessageY.push(this.#y - (GAP*i));
+            this.#thisMessageX.push(messageX[i]);
+        }  
     }
 
     /**
@@ -173,20 +177,26 @@ class Message {
      */
     move() {
         this.#y++;
+        //if(this.#y > height + BLOCK_SIZE);
     }
 
     /**
      * @returns {ARRAY} y coordinates of letters
      */
     getY() {
-        return this.#messageY;
+        return this.#thisMessageY;
     }
 
     /**
      * @returns {ARRAY} x coordinates of letters
      */
     getX() {
-        return messageX;
+        return this.#thisMessageX;
+    }
+
+    getMessageLength() {
+        let message = this.#message;
+        return message.length;
     }
 }
 
@@ -204,16 +214,24 @@ function setup() {
 }
 
 function draw() {
+    textFont(xmasFont);
+    textAlign(CENTER);
+    textSize(75);
     noStroke();
     background(0);
+
     if(!gameOver) {
         newGround.draw();
         newElf.draw();
         newElf.move();
-        //newElf.constraint();
+        //newElf.constraint();a
         newGround.move();
         newMessage.draw();
         newMessage.move();
+        fill(0, 255, 0);
+        textAlign(CORNER);
+        textSize(30);
+        text("Letters caught: " + score, 40, 50);
     }
     else {
         background(0);    
@@ -232,4 +250,9 @@ function comeDown() {
 
 function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
+}
+
+function nextConstrain() {
+    current++;
+    newElf.move();
 }

@@ -1,9 +1,11 @@
-let elf, snow, snowman, ice, cane;
-let newGround;
+let elf, snow, snowman, ice, cane, xmasFont, direction;
+let levelSelect = 0;
+let gameOver = false;
+let jump = false;
+let messageX = [];
 
 const BLOCK_SIZE = 50;
 const GAP = 500;
-let gameOver = false;
 
 function preload() {
     elf = loadImage("assets/elf.png");
@@ -11,6 +13,7 @@ function preload() {
     ice = loadImage("assets/ice.png");
     snowman = loadImage("assets/snowman.jpeg");
     cane = loadImage("assets/cane.png");
+    xmasFont = loadFont("assets/Silkscreen-Bold.ttf"); 
 }
 
 class Ground {
@@ -26,7 +29,7 @@ class Ground {
     draw() {
         for(let i = 0; i < width; i += BLOCK_SIZE) {
             imageMode(CORNER);
-            image(ice, i, height - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+            image(snow, i, height - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
         imageMode(CENTER);
 
@@ -34,8 +37,6 @@ class Ground {
         for(let i = 0; i < 5; i++) {
             image(cane, this.#candyCaneX[i], height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
         }
-        
-    
     }
 
     move() {
@@ -57,9 +58,12 @@ class Ground {
 class Elf {
     #x;
     #y;
-    #getXs;
     gameOver;
 
+    /**
+     * @param {number} x sets x coordinate
+     * @param {number} y sets y coordinate
+     */
     constructor() {
         this.#x = 20;
         this.#y = height - 2*BLOCK_SIZE;
@@ -70,27 +74,41 @@ class Elf {
         image(elf, this.#x, this.#y, 2*BLOCK_SIZE, 2*BLOCK_SIZE);
     }
 
+    
+
     move() {
         if(keyIsPressed) {
             if(key === 'd') {
-                this.#x++;
+                direction = 1;
+                if(this.#x < width - BLOCK_SIZE) {
+                    this.#x++;
+                }
             }
         }
         if(keyIsPressed) {
             if(key === 'a') {
-                this.#x--;
+                direction = -1;
+                if(this.#x > 0 + BLOCK_SIZE) {
+                    this.#x--;
+                }
             } 
         } 
-    }
 
-    jump() {
-        for(let i = 0; i < 2*BLOCK_SIZE; i++) {
-            this.#y -= 1;
-            
+        if(jump) {
+            for(let i = 0; i < 2*BLOCK_SIZE; i++) {
+                this.#y -= 1;
+                if(direction === 1 && this.#x < width - BLOCK_SIZE) {
+                    this.#x++;
+                }
+                if(direction === -1 && this.#x > 0 + BLOCK_SIZE){
+                    this.#x--;
+                }
+            }
+            setTimeout(comeDown, 200);
+            jump = false;
         }
-        setTimeout(comeDown, 1000);
-    }
 
+    }
 
     down() {
         for(let i = 0; i < 2*BLOCK_SIZE; i++) {
@@ -99,16 +117,76 @@ class Elf {
     }
 
     constraint() {
-        this.#getXs = newGround.getCandyCaneX();
-        for(let i = 0; i < 5; i++) {
-            if(this.#x >= this.#getXs[i] && this.#x >= this.#getXs[i-1] && this.#y >= height - 2*BLOCK_SIZE) {
+        let caneList = newGround.getCandyCaneX();
+        for(let i = 0; i < caneList.length; i++) {
+            if(this.#x >= caneList[i] && this.#x <= caneList[i] + BLOCK_SIZE && this.#y >= height - 2*BLOCK_SIZE) {
                 gameOver = true;
             }
         }
     }
 
+    /**
+     * 
+     * @returns {number} y coordinate of elf
+     */
     getY() {
         return this.#y;
+    }
+}
+
+class Message {
+    #y;
+    #messageY;
+    #messageChoice = ["Merry Christmas!"];
+    #message;
+
+    constructor() {
+        this.#y = -BLOCK_SIZE;
+        this.#messageY = [];
+        this.#message = this.#messageChoice[levelSelect];
+    }
+
+    /**
+     * @returns {array} random number between BLOCK_SIZE and width - BLOCK_SIZE
+     */
+    #random() {
+        return random(BLOCK_SIZE, width - BLOCK_SIZE);
+    }
+
+    draw() {
+        fill(255, 0, 0);
+        textFont(xmasFont);
+        textAlign(CENTER);
+        textSize(75);
+        let message = this.#message;
+
+        
+
+        for(let i = 0; i < message.length; i++) {
+            text(this.#message[i], messageX[i], this.#y - (GAP*i));
+            this.#messageY.push(this.#y - (GAP*i));
+        }
+    }
+
+    /**
+     * @param {number} y increases y value so letters move
+     */
+    move() {
+        this.#y++;
+    }
+
+    /**
+     * @returns {ARRAY} y coordinates of letters
+     */
+    getY() {
+        return this.#messageY;
+    }
+
+    /**
+     * @returns {ARRAY} x coordinates of letters
+     */
+    getX() {
+        return messageX;
     }
 }
 
@@ -116,7 +194,13 @@ function setup() {
     createCanvas(800, 600);
     newGround = new Ground;
     newElf = new Elf;
+    newMessage = new Message;
     frameRate(500);
+
+    for(let i = 0; i < 20; i++) {
+        messageX.push(randomVal());
+    }
+    
 }
 
 function draw() {
@@ -126,8 +210,10 @@ function draw() {
         newGround.draw();
         newElf.draw();
         newElf.move();
-        newElf.constraint();
+        //newElf.constraint();
         newGround.move();
+        newMessage.draw();
+        newMessage.move();
     }
     else {
         background(0);    
@@ -136,10 +222,14 @@ function draw() {
 
 function keyPressed() {
     if(key === 'w') {
-        newElf.jump();
+        jump = true;
     }
 }
 
 function comeDown() {
     newElf.down();
+}
+
+function randomVal() {
+    return random(BLOCK_SIZE, width - BLOCK_SIZE);
 }

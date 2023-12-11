@@ -1,4 +1,5 @@
 let elf, snow, snowman, ice, cane, xmasFont, direction;
+let YValue;
 let levelSelect = 0;
 let score = 0;
 let gameOver = false;
@@ -108,19 +109,19 @@ class Elf {
             jump = false;
         }
 
+        this.checkOver();
+    }
+
+    checkOver() {
         let letterY = newMessage.getY();
         let letterX = newMessage.getX();
         let messageLength = newMessage.getMessageLength();
 
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2) {
-            console.log("AH");
-            //this.#letterCaught();
+            console.log("IN");
         }
-    }
-
-    // #letterCaught() {
         
-    // }
+    }
 
     down() {
         for(let i = 0; i < 2*BLOCK_SIZE; i++) {
@@ -152,40 +153,42 @@ class Message {
     #thisMessageX;
     #messageChoice = ["Merry Christmas!"];
     #message;
+    #letters;
+    #messageLength;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
         this.#thisMessageY = [];
         this.#thisMessageX = [];
+        this.#letters = [];
         this.#message = this.#messageChoice[levelSelect];
+        let message = this.#message
+        this.#messageLength = message.length;
+
+
+        for(let i = 0; i < this.#messageLength; i++) {
+            this.#thisMessageY.push(this.#y - (GAP*i));
+        }
+        
     }
 
     draw() {
         fill(255, 0, 0);
-        let message = this.#message;
-
-        for(let i = 0; i < message.length; i++) {
-            text(this.#message[i], messageX[i], this.#y - (GAP*i));
-            this.#thisMessageY.push(this.#y - (GAP*i));
+        for(let i = 0; i < this.#messageLength; i++) {
+            text(this.#message[i], messageX[i], this.#thisMessageY[i]);
             this.#thisMessageX.push(messageX[i]);
-        }  
+            this.#letters.push(this.#message[i]);
+        } 
     }
 
-    /**
-     * @param {number} y increases y value so letters move
-     */
     move() {
-        this.#y++;
-        
-        //THIS IS THE BIT THAT NEEDS FIXING SOMEHOW
-        // for(let i in this.#thisMessageY) {
-        //     if(this.#thisMessageY[i] > height + BLOCK_SIZE) {
-        //         current++;
-        //     }
-        // }
-        
-
-        console.log(current);
+        let value = 300;
+        for(let i = 0; i < this.#messageLength; i++) {
+            YValue = this.#thisMessageY[i];
+            console.log(YValue);
+            //let newValue = YValue++
+            splice(this.#thisMessageY, value, i);
+        }       
     }
 
     /**
@@ -200,6 +203,10 @@ class Message {
      */
     getX() {
         return this.#thisMessageX;
+    }
+
+    getLetters() {
+        return this.#letters;
     }
 
     getMessageLength() {

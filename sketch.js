@@ -6,6 +6,7 @@ let gameOver = false;
 let finished = false;
 let jump = false;
 let messageX = [];
+let booleanList = [];
 let current = 0;
 let count = 0;
 
@@ -123,18 +124,12 @@ class Elf {
         let message = newMessage.getMessageList();
         let messageList = this.#messageList;
 
-        console.log(messageList);
+        //console.log(messageList);
 
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
-            //messageList.push(message[current]);
-            //messageList.pop();
-            splice(messageList, message[current], current);
+            newMessage.newList(current);
         }
-
-        // if(messageList.length === mLength) {
-        //     finished = true;
-        // }
     }
 
     down() {
@@ -176,15 +171,19 @@ class Message {
         this.#message = this.#messageChoice[levelSelect];
         let message = this.#message;
         this.#messageList = [];
-        this.#messageLength = message.length;
-    }
-
-    draw() {
-        let message = this.#message;
         let messageList = this.#messageList;
+        this.#messageLength = message.length;
+
         for(let i = 0; i < this.#messageLength; i++) {
             messageList.push(message[i]);
         }
+    }
+
+    draw() {
+        console.log(this.#messageList);
+        let message = this.#message;
+        let messageList = this.#messageList;
+        
         fill(255, 0, 0);
         text(messageList[current], messageX[current], this.#y);
     }
@@ -195,6 +194,14 @@ class Message {
         } else {
             current++;
             this.#y = -BLOCK_SIZE;
+        }
+    }
+
+    newList(current) {
+        let messageList = this.#messageList;
+        for(let i = 0; i < this.#messageLength; i++) {
+            messageList.pop();
+            messageList.push();
         }
     }
 
@@ -262,9 +269,9 @@ function draw() {
     if (gameOver) {
         background(0);    
     } 
-    if(finished) {
-        console.log("FINISHED");
-    }
+    // if(finished) {
+    //     console.log("FINISHED");
+    // }
 }
 
 function keyPressed() {

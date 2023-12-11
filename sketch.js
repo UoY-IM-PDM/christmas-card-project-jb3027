@@ -149,65 +149,74 @@ class Elf {
 
 class Message {
     #y;
-    #thisMessageY;
+    //#thisMessageY;
     #thisMessageX;
     #messageChoice = ["Merry Christmas!"];
     #message;
-    #letters;
+    #currentLetter;
     #messageLength;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
-        this.#thisMessageY = [];
+        //this.#thisMessageY = [];
         this.#thisMessageX = [];
-        this.#letters = [];
+        
         this.#message = this.#messageChoice[levelSelect];
         let message = this.#message
         this.#messageLength = message.length;
 
 
-        for(let i = 0; i < this.#messageLength; i++) {
-            this.#thisMessageY.push(this.#y - (GAP*i));
-        }
+        // for(let i = 0; i < this.#messageLength; i++) {
+        //     this.#thisMessageY.push(this.#y - (GAP*i));
+        // }
         
     }
 
     draw() {
         fill(255, 0, 0);
-        for(let i = 0; i < this.#messageLength; i++) {
-            text(this.#message[i], messageX[i], this.#thisMessageY[i]);
-            this.#thisMessageX.push(messageX[i]);
-            this.#letters.push(this.#message[i]);
-        } 
+        // for(let i = 0; i < this.#messageLength; i++) {
+        //     text(this.#message[i], messageX[i], this.#thisMessageY[i]);
+        // } 
+
+        //once letter is past height + BLOCK_SIZE then go to next letter?
+       
+        text(this.#message[current], messageX[current], this.#y);
     }
 
     move() {
-        let value = 300;
-        for(let i = 0; i < this.#messageLength; i++) {
-            YValue = this.#thisMessageY[i];
-            console.log(YValue);
-            //let newValue = YValue++
-            splice(this.#thisMessageY, value, i);
-        }       
+        // let value = 300;
+        // for(let i = 0; i < this.#messageLength; i++) {
+        //     YValue = this.#thisMessageY[i];
+        //     console.log(YValue);
+        //     //let newValue = YValue++
+        //     splice(this.#thisMessageY, value, i);
+        // }     
+        
+        if(this.#y < height + BLOCK_SIZE) {
+            this.#y++;
+        } else {
+            current++;
+            this.#y = -BLOCK_SIZE;
+        }
     }
 
     /**
      * @returns {ARRAY} y coordinates of letters
      */
     getY() {
-        return this.#thisMessageY;
+        return this.#y;
     }
 
     /**
      * @returns {ARRAY} x coordinates of letters
      */
     getX() {
-        return this.#thisMessageX;
+        return messageX;
     }
 
-    getLetters() {
-        return this.#letters;
-    }
+    // getLetters() {
+    //     return this.#letters;
+    // }
 
     getMessageLength() {
         let message = this.#message;
@@ -239,7 +248,7 @@ function draw() {
         newGround.draw();
         newElf.draw();
         newElf.move();
-        //newElf.constraint();a
+        //newElf.constraint();
         newGround.move();
         newMessage.draw();
         newMessage.move();

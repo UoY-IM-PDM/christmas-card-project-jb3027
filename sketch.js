@@ -3,9 +3,11 @@ let YValue;
 let levelSelect = 0;
 let score = 0;
 let gameOver = false;
+let finished = false;
 let jump = false;
 let messageX = [];
 let current = 0;
+let count = 0;
 
 const BLOCK_SIZE = 50;
 const GAP = 500;
@@ -62,7 +64,8 @@ class Elf {
     #x;
     #y;
     gameOver;
-    #caught;
+    #message;
+    #messageList;
 
     /**
      * @param {number} x sets x coordinate
@@ -71,7 +74,7 @@ class Elf {
     constructor() {
         this.#x = 20;
         this.#y = height - 2*BLOCK_SIZE;
-        this.#caught = "";
+        this.#messageList = [];
     }
 
     draw() {
@@ -116,13 +119,22 @@ class Elf {
     checkOver() {
         let letterY = newMessage.getY();
         let letterX = newMessage.getX();
-        let message = newMessage.getMessage();
-        let currentMessage = message[current];
+        let mLength = newMessage.getMessageLength();
+        let message = newMessage.getMessageList();
+        let messageList = this.#messageList;
+
+        console.log(messageList);
 
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
-            currentMessage
+            //messageList.push(message[current]);
+            //messageList.pop();
+            splice(messageList, message[current], current);
         }
+
+        // if(messageList.length === mLength) {
+        //     finished = true;
+        // }
     }
 
     down() {
@@ -156,19 +168,25 @@ class Message {
     #message;
     #currentLetter;
     #messageLength;
+    #messageList;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
         this.#thisMessageX = [];
-        
         this.#message = this.#messageChoice[levelSelect];
-        let message = this.#message
+        let message = this.#message;
+        this.#messageList = [];
         this.#messageLength = message.length;
     }
 
     draw() {
+        let message = this.#message;
+        let messageList = this.#messageList;
+        for(let i = 0; i < this.#messageLength; i++) {
+            messageList.push(message[i]);
+        }
         fill(255, 0, 0);
-        text(this.#message[current], messageX[current], this.#y);
+        text(messageList[current], messageX[current], this.#y);
     }
 
     move() {
@@ -194,10 +212,6 @@ class Message {
         return messageX;
     }
 
-    // getLetters() {
-    //     return this.#letters;
-    // }
-
     getMessageLength() {
         let message = this.#message;
         return message.length;
@@ -205,6 +219,10 @@ class Message {
 
     getMessage() {
         return this.#message;
+    }
+
+    getMessageList() {
+        return this.#messageList;
     }
 }
 
@@ -228,7 +246,7 @@ function draw() {
     noStroke();
     background(0);
 
-    if(!gameOver) {
+    if(!gameOver && !finished) {
         newGround.draw();
         newElf.draw();
         newElf.move();
@@ -241,9 +259,12 @@ function draw() {
         textSize(30);
         text("Letters caught: " + score, 40, 50);
     }
-    else {
+    if (gameOver) {
         background(0);    
-    }  
+    } 
+    if(finished) {
+        console.log("FINISHED");
+    }
 }
 
 function keyPressed() {

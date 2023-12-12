@@ -2,12 +2,12 @@ let elf, snow, snowman, ice, cane, xmasFont, direction;
 let YValue;
 let levelSelect = 0;
 let score = 0;
-let gameOver = false;
-//let finished = false;
-let jump = false;
-let messageX = [];
 let current = 0;
 let count = 0;
+let gameOver = false;
+let checkSpace = true;
+let jump = false;
+let messageX = [];
 
 const BLOCK_SIZE = 50;
 const GAP = 500;
@@ -125,15 +125,20 @@ class Elf {
         let mLength = newMessage.getMessageLength();
         let messageList = this.#messageList;
         
-        if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
-        && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
+        if((this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
+        && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) 
+        || message[current] === " ") {
             this.#check = true;
         } 
             
         if(this.#check) {
-            if(messageList[current] != message[current]) {
+            if(messageList[current] != message[current] && message[current] != " ") {
                 splice(messageList, message[current], current);
                 score++;
+                this.#caught = messageList[current];
+            }
+            if(message[current] === " ") {
+                splice(messageList, message[current], current);
                 this.#caught = messageList[current];
             }
             this.#check = false;
@@ -184,7 +189,7 @@ class Elf {
 
 class Message {
     #y;
-    #messageChoice = ["Merry_Christmas!"];
+    #messageChoice = ["Merry Christmas!"];
     #message;
     #messageLength;
     #messageList;
@@ -202,43 +207,22 @@ class Message {
         for(let i = 0; i < this.#messageLength; i++) {
             messageList.push(message[i]);
         }
-
-        // for(let i = 0; i < this.#messageLength; i++) {
-        //     if(finished) {
-        //         if(message[i] === "_") {
-        //             console.log("True");
-        //             splice(messageList, " ", i);
-        //         }            
-        //     } else {
-        //         if(message[i] === " ") {
-        //             messageList.push("_");
-        //         } else {
-        //             messageList.push(message[i]);
-        //         }
-        //     }
-        // }
     }
 
     draw() {
         let message = this.#message;
         let messageList = this.#messageList;
         let mLength = this.#messageLength;
+        
 
         fill(255, 0, 0);
         text(messageList[current], messageX[current], this.#y);
         
         textSize(40);
         textAlign(CENTER);
-        
+            
         if(newElf.checkOver()) {
-            for(let i = 0; i < messageList.length; i++) {
-                if(messageList[i] === "_") {
-                    splice(messageList, " ", i);
-                }
-            }
-            let separator = " ";
-            let joinedText = join(messageList, separator);
-            completeScreen(joinedText);
+            completeScreen(messageList);
         } 
     }
 
@@ -285,15 +269,15 @@ function setup() {
     newGround = new Ground;
     newElf = new Elf;
     newMessage = new Message;
-    frameRate(500);
+    
 
     for(let i = 0; i < 20; i++) {
         messageX.push(randomVal());
     }
-    
 }
 
 function draw() {
+    frameRate(500);
     textFont(xmasFont);
     textAlign(CENTER);
     textSize(75);
@@ -311,12 +295,12 @@ function draw() {
         fill(0, 255, 0);
         textAlign(CORNER);
         textSize(20);
-        text("Letters caught: " + score + " / " + newMessage.getMessageLength(), 40, 50);
-
-        
+        text("Letters caught: " + score + " / " + (newMessage.getMessageLength() -1), 40, 50);
     }
     if (gameOver) {
-        background(0);    
+        background(0); 
+        textAlign(CENTER);  
+        text("GAME OVER", width/2, height/2);
     } 
 }
 
@@ -334,8 +318,12 @@ function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
 }
 
-function completeScreen(joinedText) {
+function completeScreen(messageList) {
     background(0);
-    textSize(20);
+    textAlign(CENTER);
+    textSize(35);
+
+    let separator = " ";
+    let joinedText = join(messageList, separator);
     text(joinedText, width/2, height/2);
 }

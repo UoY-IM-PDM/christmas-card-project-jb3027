@@ -3,7 +3,7 @@ let YValue;
 let levelSelect = 0;
 let score = 0;
 let gameOver = false;
-let finished = false;
+//let finished = false;
 let jump = false;
 let messageX = [];
 let current = 0;
@@ -140,7 +140,7 @@ class Elf {
         }
 
         if(messageList.length === mLength) {
-            finished = true;
+            completeScreen(messageList);
         }  
     }
 
@@ -184,7 +184,7 @@ class Elf {
 
 class Message {
     #y;
-    #messageChoice = ["Merry Christmas!"];
+    #messageChoice = ["Merry_Christmas!"];
     #message;
     #messageLength;
     #messageList;
@@ -198,21 +198,25 @@ class Message {
         let messageList = this.#messageList;
         this.#messageLength = message.length;
         this.#xCoord = 80;
-
+        
         for(let i = 0; i < this.#messageLength; i++) {
-            if(finished) {
-                if(message[i] === "_") {
-                    console.log("True");
-                    splice(messageList, " ", i);
-                }            
-            } else {
-                if(message[i] === " ") {
-                    messageList.push("_");
-                } else {
-                    messageList.push(message[i]);
-                }
-            }
+            messageList.push(message[i]);
         }
+
+        // for(let i = 0; i < this.#messageLength; i++) {
+        //     if(finished) {
+        //         if(message[i] === "_") {
+        //             console.log("True");
+        //             splice(messageList, " ", i);
+        //         }            
+        //     } else {
+        //         if(message[i] === " ") {
+        //             messageList.push("_");
+        //         } else {
+        //             messageList.push(message[i]);
+        //         }
+        //     }
+        // }
     }
 
     draw() {
@@ -225,11 +229,16 @@ class Message {
         
         textSize(40);
         textAlign(CENTER);
-        let separator = "";
+        
         if(newElf.checkOver()) {
+            for(let i = 0; i < messageList.length; i++) {
+                if(messageList[i] === "_") {
+                    splice(messageList, " ", i);
+                }
+            }
+            let separator = " ";
             let joinedText = join(messageList, separator);
-            text(joinedText, 300, 300);
-            finished = true;
+            completeScreen(joinedText);
         } 
     }
 
@@ -303,6 +312,8 @@ function draw() {
         textAlign(CORNER);
         textSize(20);
         text("Letters caught: " + score + " / " + newMessage.getMessageLength(), 40, 50);
+
+        
     }
     if (gameOver) {
         background(0);    
@@ -321,4 +332,10 @@ function comeDown() {
 
 function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
+}
+
+function completeScreen(joinedText) {
+    background(0);
+    textSize(20);
+    text(joinedText, width/2, height/2);
 }

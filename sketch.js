@@ -6,7 +6,6 @@ let gameOver = false;
 let finished = false;
 let jump = false;
 let messageX = [];
-let booleanList = [];
 let current = 0;
 let count = 0;
 
@@ -64,9 +63,9 @@ class Ground {
 class Elf {
     #x;
     #y;
-    gameOver;
-    #message;
     #messageList;
+    #check;
+    #complete;
 
     /**
      * @param {number} x sets x coordinate
@@ -76,12 +75,13 @@ class Elf {
         this.#x = 20;
         this.#y = height - 2*BLOCK_SIZE;
         this.#messageList = [];
+        this.#check = false;
+        this.#complete;
     }
 
     draw() {
         imageMode(CENTER);
         image(elf, this.#x, this.#y, 2*BLOCK_SIZE, 2*BLOCK_SIZE);
-        this.checkOver();
     }
 
     move() {
@@ -101,7 +101,6 @@ class Elf {
                 }
             } 
         } 
-
         if(jump) {
             for(let i = 0; i < 2*BLOCK_SIZE; i++) {
                 this.#y -= 1;
@@ -120,15 +119,31 @@ class Elf {
     checkOver() {
         let letterY = newMessage.getY();
         let letterX = newMessage.getX();
-        let mLength = newMessage.getMessageLength();
         let message = newMessage.getMessageList();
+        let mLength = newMessage.getMessageLength();
         let messageList = this.#messageList;
-
-        //console.log(messageList);
-
+        
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
-            newMessage.newList(current);
+            this.#check = true;
+        }
+
+        
+        
+
+        if(this.#check) {
+            if(messageList[current] != message[current]) {
+                splice(messageList, message[current], current);
+            }
+            this.#check = false;
+        }
+        console.log(mLength);
+        console.log(messageList.length);
+
+        if(messageList.length === mLength) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -158,16 +173,13 @@ class Elf {
 
 class Message {
     #y;
-    #thisMessageX;
     #messageChoice = ["Merry Christmas!"];
     #message;
-    #currentLetter;
     #messageLength;
     #messageList;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
-        this.#thisMessageX = [];
         this.#message = this.#messageChoice[levelSelect];
         let message = this.#message;
         this.#messageList = [];
@@ -175,17 +187,30 @@ class Message {
         this.#messageLength = message.length;
 
         for(let i = 0; i < this.#messageLength; i++) {
-            messageList.push(message[i]);
+            if(message[i] === " ") {
+                messageList.push("_");
+            } else {
+                messageList.push(message[i]);
+            }
+            //} 
         }
     }
 
     draw() {
-        console.log(this.#messageList);
         let message = this.#message;
         let messageList = this.#messageList;
+        let messageString = "";
         
         fill(255, 0, 0);
         text(messageList[current], messageX[current], this.#y);
+
+        if(newElf.checkOver()) {
+            console.log("WORKING");
+            for(let i = 0; i < this.#messageLength; i++) {
+                messageString += message[current];
+            }
+            text(messageString, 300, 300);
+        }
     }
 
     move() {
@@ -197,11 +222,10 @@ class Message {
         }
     }
 
-    newList(current) {
+    setValues() {
         let messageList = this.#messageList;
         for(let i = 0; i < this.#messageLength; i++) {
-            messageList.pop();
-            messageList.push();
+            
         }
     }
 

@@ -128,15 +128,13 @@ class Elf {
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
             this.#check = true;
-        } else {
-            this.#check = false;
-        }
+        } 
             
         if(this.#check) {
             if(messageList[current] != message[current]) {
                 splice(messageList, message[current], current);
                 score++;
-                this.#caught = message[current];
+                this.#caught = messageList[current];
             }
             this.#check = false;
         }
@@ -191,7 +189,6 @@ class Message {
     #messageLength;
     #messageList;
     #xCoord;
-    #replay;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
@@ -201,7 +198,6 @@ class Message {
         let messageList = this.#messageList;
         this.#messageLength = message.length;
         this.#xCoord = 80;
-        this.#replay = [];
 
         for(let i = 0; i < this.#messageLength; i++) {
             if(finished) {
@@ -223,23 +219,14 @@ class Message {
         let message = this.#message;
         let messageList = this.#messageList;
         let mLength = this.#messageLength;
-        let replayList = this.#replay;
 
         fill(255, 0, 0);
         text(messageList[current], messageX[current], this.#y);
-        if(messageList.length < message.length) {
-            for(let i = 0; i < replayList.length; i++) {
-                text(replayList[i], messageX[i], this.#y);
-            }
-            
-        }
         
         textSize(40);
         textAlign(CENTER);
         let separator = "";
-        newElf.checkOver();
-
-        if(finished) {
+        if(newElf.checkOver()) {
             let joinedText = join(messageList, separator);
             text(joinedText, 300, 300);
             finished = true;
@@ -247,20 +234,12 @@ class Message {
     }
 
     move() {
-
         if(this.#y < height + BLOCK_SIZE) {
             this.#y++;
-        } else {
-            if(newElf.getCaught()) {
-                current++;
-                this.#y = -BLOCK_SIZE;
-            } else {
-                let newReplay = this.#replay;
-                newReplay.push(this.#message[current]);
-                console.log(newReplay);
-                current++;
-                this.#y = -BLOCK_SIZE;
-            }            
+        } 
+        if(this.#y > height + BLOCK_SIZE || newElf.getCaught()) {
+            current++;
+            this.#y = -BLOCK_SIZE;
         }
     }
 

@@ -10,7 +10,7 @@ let current = 0;
 let count = 0;
 
 const BLOCK_SIZE = 50;
-const GAP = 700;
+const GAP = 500;
 
 function preload() {
     elf = loadImage("assets/elf.png");
@@ -37,7 +37,7 @@ class Ground {
             image(snow, i, height - BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
         imageMode(CENTER);
-        this.#candyCaneX = [this.#x, this.#x + GAP, this.#x + 1.5*GAP, this.#x + 2*GAP, this.#x1 + 2.5*GAP];
+        this.#candyCaneX = [this.#x, this.#x + GAP, this.#x + 2*GAP, this.#x + 3*GAP, this.#x1 + 3*GAP];
         for(let i = 0; i < 5; i++) {
             image(cane, this.#candyCaneX[i], height - 1.5*BLOCK_SIZE, BLOCK_SIZE/2, BLOCK_SIZE);
         }
@@ -66,6 +66,7 @@ class Elf {
     #check;
     #complete;
     #caught;
+    #isOver;
 
     /**
      * @param {number} x sets x coordinate
@@ -118,7 +119,6 @@ class Elf {
     }
 
     checkOver() {
-        console.log("CHECK");
         let letterY = newMessage.getY();
         let letterX = newMessage.getX();
         let message = newMessage.getMessageList();
@@ -128,13 +128,15 @@ class Elf {
         if(this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) {
             this.#check = true;
-        } 
+        } else {
+            this.#check = false;
+        }
             
         if(this.#check) {
             if(messageList[current] != message[current]) {
                 splice(messageList, message[current], current);
                 score++;
-                this.#caught = messageList[current];
+                this.#caught = message[current];
             }
             this.#check = false;
         }
@@ -189,6 +191,7 @@ class Message {
     #messageLength;
     #messageList;
     #xCoord;
+    #replay;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
@@ -198,6 +201,7 @@ class Message {
         let messageList = this.#messageList;
         this.#messageLength = message.length;
         this.#xCoord = 80;
+        this.#replay = [];
 
         for(let i = 0; i < this.#messageLength; i++) {
             if(finished) {
@@ -219,14 +223,23 @@ class Message {
         let message = this.#message;
         let messageList = this.#messageList;
         let mLength = this.#messageLength;
+        let replayList = this.#replay;
 
         fill(255, 0, 0);
         text(messageList[current], messageX[current], this.#y);
+        if(messageList.length < message.length) {
+            for(let i = 0; i < replayList.length; i++) {
+                text(replayList[i], messageX[i], this.#y);
+            }
+            
+        }
         
         textSize(40);
         textAlign(CENTER);
         let separator = "";
-        if(newElf.getIsOver()) {
+        newElf.checkOver();
+
+        if(finished) {
             let joinedText = join(messageList, separator);
             text(joinedText, 300, 300);
             finished = true;
@@ -234,12 +247,20 @@ class Message {
     }
 
     move() {
+
         if(this.#y < height + BLOCK_SIZE) {
             this.#y++;
-        } 
-        if(this.#y > height + BLOCK_SIZE || newElf.getCaught()) {
-            current++;
-            this.#y = -BLOCK_SIZE;
+        } else {
+            if(newElf.getCaught()) {
+                current++;
+                this.#y = -BLOCK_SIZE;
+            } else {
+                let newReplay = this.#replay;
+                newReplay.push(this.#message[current]);
+                console.log(newReplay);
+                current++;
+                this.#y = -BLOCK_SIZE;
+            }            
         }
     }
 
@@ -307,9 +328,6 @@ function draw() {
     if (gameOver) {
         background(0);    
     } 
-    // if(finished) {
-    //     console.log("FINISHED");
-    // }
 }
 
 function keyPressed() {
@@ -325,5 +343,3 @@ function comeDown() {
 function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
 }
-
-

@@ -12,11 +12,12 @@ let jump = false;
 let completeButton = false;
 let loadButton = false;
 let playAgainButton = false;
-let pressed = false;
+let done = false;
 
 let startGame = 0;
 let restartGame;
 let playAgain;
+let newGround, newMessage, newElf;
 
 const BLOCK_SIZE = 50;
 const GAP = 800;
@@ -30,6 +31,202 @@ function preload() {
     xmasFont = loadFont("assets/Silkscreen-Bold.ttf"); 
 }
 
+function setup() {
+    createCanvas(800, 600);
+    newMessage = new Message();
+
+    for(let i = 0; i < 20; i++) {
+        messageX.push(randomVal());
+    }
+}
+
+function draw() {
+    frameRate(500);
+    textFont(xmasFont);
+    textAlign(CENTER);
+    textSize(75);
+    noStroke();
+    background(0);
+    console.log(startGame);
+    gameOver = false;
+    let checkComplete = newMessage.getMessage();
+    
+    if(startGame === 0) {
+        loadScreen();
+    }
+    if(startGame === 1) { 
+        newGame();
+    }
+    if(startGame === 2) {
+        overScreen();
+    }
+    if(startGame === 3) {
+        completeScreen(checkComplete);
+    }
+    if(!gameOver && newElf.getComplete() && !done) {
+        startGame = 3;
+    }  
+    if(gameOver) {
+        startGame = 2;
+    } 
+}
+
+/**
+ * The screen showed when the game is over.
+ */
+function overScreen() {
+    playAgainButton = false;
+    restartButton = false;
+    loadButton = false;
+    background(0); 
+    textAlign(CENTER);  
+    text("GAME OVER", width/2, height/2);
+    button("START GAME", 0, -50, "gameOver");
+}
+
+/**
+ * If w pressed then make the elf jump
+ */
+function keyPressed() {
+    if(key === 'w') {
+        jump = true;
+    }
+}
+
+/**
+ * Makes elf move down after jumping.
+ */
+function comeDown() {
+    newElf.down();
+}
+
+/**
+ * 
+ * @returns {value} random number between BLOCK_SIZE and width - BLOCK_SIZE
+ */
+function randomVal() {
+    return random(BLOCK_SIZE, width - BLOCK_SIZE);
+}
+
+/**
+ * 
+ * @param {string} message The message to be displayed
+ */
+function completeScreen(message) {
+    playAgainButton = false;
+    restartButton = false;
+    loadButton = false;
+    background(0);
+    textAlign(CENTER);
+    textSize(20);
+    fill(255);
+    text("CONGRATULATIONS!", width/2, height*0.15);
+    text("You have collected the message...", width/2, height*0.2);
+    textSize(50);
+    fill(255, 0, 0);
+    text(message, width/2, height/2);
+    button("PLAY AGAIN", 0, 0, "complete");
+}
+
+/**
+ * The initial screen
+ */
+function loadScreen() {
+    playAgainButton = false;
+    restartButton = false;
+    loadButton = false;
+    gameOver = false;
+    score = 0;
+    current = 0;
+
+    newGround = new Ground();
+    newElf = new Elf();
+    newMessage = new Message();
+
+    background(0);
+    newGround.draw();
+    newElf.draw();
+    fill(255);
+    textAlign(CENTER);
+    textSize(25);
+    text("Help the elf collect all the falling letters to uncover the hidden message", width/2, height*0.2, 800);
+    fill(255, 0, 0);
+    text("but beware of the candy canes...", width/2, height*0.37);
+    button("START GAME", 0, -150, "loadScreen");
+}
+
+/**
+ * Second screen, the start of game play
+ */
+function newGame() {
+    gameOver = false;
+    background(0);
+    fill(0, 255, 0);
+    textAlign(CORNER);
+    textSize(30);
+    text("Letters caught: " + score + " / " + (newMessage.getMessageLength() - spaces), 40, 50);
+    newGround.draw();
+    newElf.draw();
+    newElf.move();
+    newElf.constraint();
+    newGround.move();
+    newMessage.draw();
+    newMessage.move();
+}
+
+/**
+ * 
+ * @param {string} buttonLabel The text to be displayed on the button
+ * @param {number} xCord x coordinate of button
+ * @param {number} yCord y coordinate of butto
+ * @param {string} functionName The name of the function to be called within mouseClicked()
+ */
+function button(buttonLabel, xCord, yCord, functionName) {
+    //if mouse is over the button
+    if(mouseX >= width/2 + xCord - 130 && mouseX <= width/2 + xCord + 130
+    && mouseY <= (height*0.8 + yCord) + 45 && mouseY >= (height*0.8 + yCord)) {
+        //checks to see which button the mouse is over
+        if(functionName === "complete") {
+            playAgainButton = true;
+        }
+        if(functionName === "gameOver") {
+            restartButton = true;
+        }
+        if(functionName === "loadScreen") {
+            loadButton = true;
+        }
+        fill(0, 255, 0);
+    } else {
+        playAgainButton = false;
+        restartButton = false;
+        loadButton = false;
+        fill(255, 0, 0);
+    }  
+    //draws appropriate button                         
+    rectMode(CENTER);
+    rect(width/2 + xCord, height*0.835 + yCord, 260, 40);
+    fill(255);
+    textSize(30);
+    text(buttonLabel, width/2 + xCord, height*0.85 + yCord);
+}
+
+
+function mouseClicked() {
+    if(loadButton) { 
+        startGame = 1;
+    }
+    if(restartButton) {
+        startGame = 0;
+    }
+    if(playAgainButton) {
+        done = true;
+        startGame = 0;
+    }
+}
+
+/**
+ * Class for creating the ground
+ */
 class Ground {
     #x;
     #x1;
@@ -63,11 +260,18 @@ class Ground {
         this.#x1--;
     }
 
+    /**
+     * 
+     * @returns {array} x coordinates of the candy canes
+     */
     getCandyCaneX() {
         return this.#candyCaneX;
     }
 }
 
+/**
+ * Class for creating the elf
+ */
 class Elf {
     #x;
     #y;
@@ -77,10 +281,6 @@ class Elf {
     #caught;
     #isOver;
 
-    /**
-     * @param {number} x sets x coordinate
-     * @param {number} y sets y coordinate
-     */
     constructor() {
         this.#x = width/2;
         this.#y = height - 2*BLOCK_SIZE;
@@ -133,18 +333,21 @@ class Elf {
         let mLength = newMessage.getMessageLength();
         let messageList = this.#messageList;
 
+        //Checks to see if the elf is touching the current letter
         if((this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) 
         || message[current] === " ") {
             this.#check = true;
         } 
-            
+        
+        //if the elf is touching the letter then add the letter to the caught list once
         if(this.#check) {
             if(messageList[current] != message[current] && message[current] != " ") {
                 splice(messageList, message[current], current);
                 score++;
                 this.#caught = messageList[current];
             }
+            //if the letter is a space, add it to caught automatically (can't catch blank space)
             if(message[current] === " ") {
                 splice(messageList, message[current], current);
                 this.#caught = messageList[current];
@@ -152,11 +355,10 @@ class Elf {
             }
             this.#check = false;
         }
-        if(messageList.length === mLength) {
+        //if all letters are caught while playing
+        if(messageList.length === mLength && startGame === 1) {
             this.#complete = true;
-            // completeScreen(newMessage.getMessage());
-        }  
-        
+        }         
     }
 
     down() {
@@ -166,6 +368,7 @@ class Elf {
     }
 
     constraint() {
+        //if elf is touching candy cane
         let caneList = newGround.getCandyCaneX();
         if(!gameOver) {
             for(let i = 0; i < caneList.length; i++) {
@@ -177,18 +380,27 @@ class Elf {
     }
 
     /**
-     * 
+     * Get the Y value
      * @returns {number} y coordinate of elf
      */
     getY() {
         return this.#y;
     }
 
+    /**
+     * Get the final length of the message
+     * @returns {number} length of collected letter array
+     */
     getFinalLength() {
         let messageList = this.#messageList;
         return messageList.length;
     }
 
+    /**
+     * Check if the letter has been caught
+     * @param {array} messageList list of letters in the array
+     * @returns {boolean} whether letter has been caught or not
+     */
     getIfCaught(messageList) {
         if(messageList[current] === this.#caught) {
             return true;
@@ -197,6 +409,9 @@ class Elf {
         }
     }
 
+    /**
+     * @returns {boolean} returns true if all the letters have been collected
+     */
     getComplete() {
         return this.#complete;
     }
@@ -204,7 +419,7 @@ class Elf {
 
 class Message {
     #y;
-    #messageChoice = ["A"];
+    #messageChoice = ["MERRY CHRISTMAS!"];
     #message;
     #messageLength;
     #messageList;
@@ -255,182 +470,49 @@ class Message {
     }
 
     /**
-     * @returns {ARRAY} y coordinates of letters
+     * get Y Value
+     * @returns {array} y coordinates of letters
      */
     getY() {
         return this.#y;
     }
 
     /**
-     * @returns {ARRAY} x coordinates of letters
+     * @returns {array} x coordinates of letters
      */
     getX() {
         return messageX;
     }
-
+    
+    /**
+     * Get length of the message
+     * @returns {number} number of letters in the message
+     */
     getMessageLength() {
         let message = this.#message;
         return message.length;
     }
 
+    /**
+     * Get the message
+     * @returns {array} gets original message
+     */
     getMessage() {
         return this.#message;
     }
 
+    /**
+     * @returns {array} gets list of letters that have been caught
+     */
     getMessageList() {
         return this.#messageList;
     }
 
+    /**
+     * Gets whether all the letters have been collected
+     * @returns {boolean} returns true if all letters have been collected
+     */
     getComplete() {
         return this.#complete;
-    }
-}
-
-function setup() {
-    createCanvas(800, 600);
-    newGround = new Ground;
-    newElf = new Elf;
-    newMessage = new Message;
-    
-    for(let i = 0; i < 20; i++) {
-        messageX.push(randomVal());
-    }
-}
-
-function draw() {
-    frameRate(500);
-    textFont(xmasFont);
-    textAlign(CENTER);
-    textSize(75);
-    noStroke();
-    background(0);
-    console.log(startGame);
-    //console.log("START GAME = " + startGame);
-    gameOver = false;
-    
-    if(startGame === 0) {
-        loadScreen();
-    }
-    if(startGame === 1) {
-        newGame();
-    }
-    if(startGame === 2) {
-        overScreen();
-    }
-    if(startGame === 3) {
-        completeScreen(newMessage.getMessage());
-    }
-    if(startGame === 4) {
-        completeScreen(newMessage.getMessage());
-    }
-
-    if(!gameOver) {
-        if(newElf.getComplete()) {
-            startGame = 3;
-        }       
-    }
-    if(gameOver) {
-        startGame = 2;
-    } 
-}
-
-function overScreen() {
-    background(0); 
-    textAlign(CENTER);  
-    text("GAME OVER", width/2, height/2);
-    button("START GAME", 0, -50, "gameOver");
-}
-
-function keyPressed() {
-    if(key === 'w') {
-        jump = true;
-    }
-}
-
-function comeDown() {
-    newElf.down();
-}
-
-function randomVal() {
-    return random(BLOCK_SIZE, width - BLOCK_SIZE);
-}
-
-function completeScreen(message) {
-    completeButton = false;
-    //("COMPLETE SCREEN");
-    background(0);
-    textAlign(CENTER);
-    textSize(20);
-    fill(255);
-    text("CONGRATULATIONS!", width/2, height*0.15);
-    text("You have collected the message...", width/2, height*0.2);
-    textSize(50);
-    fill(255, 0, 0);
-    text(message, width/2, height/2);
-    button("PLAY AGAIN", 0, 0, "complete");
-}
-
-function loadScreen() {
-    loadButton = false;
-    gameOver = false;
-    //console.log("LOAD SCREEN");
-    background(0);
-    newGround.draw();
-    newElf.draw();
-    fill(255);
-    textAlign(CENTER);
-    textSize(25);
-    text("Help the elf collect all the falling letters to uncover the hidden message", width/2, height*0.2, 800);
-    fill(255, 0, 0);
-    text("but beware of the candy canes...", width/2, height*0.37);
-    button("START GAME", 0, -150, "loadScreen");
-}
-
-function newGame() {
-    gameOver = false;
-    //("NEW GAME");
-    background(0);
-    fill(0, 255, 0);
-    textAlign(CORNER);
-    textSize(30);
-    text("Letters caught: " + score + " / " + (newMessage.getMessageLength() - spaces), 40, 50);
-    newGround.draw();
-    newElf.draw();
-    newElf.move();
-    //newElf.constraint();
-    newGround.move();
-    newMessage.draw();
-    newMessage.move();
-}
-
-function button(buttonLabel, xCord, yCord, functionName) {
-    if(mouseX >= width/2 + xCord - 130 && mouseX <= width/2 + xCord + 130
-    && mouseY <= (height*0.8 + yCord) + 45 && mouseY >= (height*0.8 + yCord)) {
-        if(functionName === "complete") {
-            playAgainButton = true;
-        }
-        if(functionName === "gameOver") {
-            restartButton = true;
-        }
-        if(functionName === "loadScreen") {
-            loadButton = true;
-        }
-        fill(0, 255, 0);
-    } else {
-        playAgainButton = false;
-        restartButton = false;
-        loadButton = false;
-        fill(255, 0, 0);
-    }                           
-    rectMode(CENTER);
-    rect(width/2 + xCord, height*0.835 + yCord, 260, 40);
-    fill(255);
-    textSize(30);
-    text(buttonLabel, width/2 + xCord, height*0.85 + yCord);
-}
-
-function mouseClicked() {
-    if(loadButton || restartButton || playAgainButton) { //|| playAgainButton
-        startGame = 1;
     }
 }

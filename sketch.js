@@ -20,7 +20,7 @@ let playAgain;
 let newGround, newMessage, newElf;
 
 const BLOCK_SIZE = 50;
-const GAP = 800;
+const GAP = 500;
 
 function preload() {
     elf = loadImage("assets/elf.png");

@@ -4,13 +4,19 @@ let levelSelect = 0;
 let score = 0;
 let current = 0;
 let count = 0;
+let spaces = 0;
 let gameOver = false;
 let checkSpace = true;
 let jump = false;
+let completeButton = false;
+let loadButton = false;
+let startGame = false;
+let restartGame = false;
+let playAgain = false;
 let messageX = [];
 
 const BLOCK_SIZE = 50;
-const GAP = 500;
+const GAP = 800;
 
 function preload() {
     elf = loadImage("assets/elf.png");
@@ -73,12 +79,11 @@ class Elf {
      * @param {number} y sets y coordinate
      */
     constructor() {
-        this.#x = 20;
+        this.#x = width/2;
         this.#y = height - 2*BLOCK_SIZE;
         this.#messageList = [];
         this.#check = false;
-        this.#complete;
-        this.#caught;
+        this.#complete = false;
     }
 
     draw() {
@@ -124,7 +129,7 @@ class Elf {
         let message = newMessage.getMessageList();
         let mLength = newMessage.getMessageLength();
         let messageList = this.#messageList;
-        
+
         if((this.#x >= letterX[current] - BLOCK_SIZE/2 && this.#x <= letterX[current] + BLOCK_SIZE/2 
         && this.#y + BLOCK_SIZE/2 >= letterY - BLOCK_SIZE/2 && this.#y - BLOCK_SIZE/2 <= letterY + BLOCK_SIZE/2) 
         || message[current] === " ") {
@@ -140,13 +145,15 @@ class Elf {
             if(message[current] === " ") {
                 splice(messageList, message[current], current);
                 this.#caught = messageList[current];
+                spaces++;
             }
             this.#check = false;
         }
-
         if(messageList.length === mLength) {
-            completeScreen(messageList);
+            this.#complete = true;
+            // completeScreen(newMessage.getMessage());
         }  
+        
     }
 
     down() {
@@ -177,23 +184,26 @@ class Elf {
         return messageList.length;
     }
 
-    getCaught() {
-        let messageList = this.#messageList;
+    getIfCaught(messageList) {
         if(messageList[current] === this.#caught) {
-            return this.#caught;
+            return true;
         } else {
             return false;
-        } 
+        }
+    }
+
+    getComplete() {
+        return this.#complete;
     }
 }
 
 class Message {
     #y;
-    #messageChoice = ["Merry Christmas!"];
+    #messageChoice = ["Hi"];
     #message;
     #messageLength;
     #messageList;
-    #xCoord;
+    #complete;
 
     constructor() {
         this.#y = -BLOCK_SIZE;
@@ -202,7 +212,7 @@ class Message {
         this.#messageList = [];
         let messageList = this.#messageList;
         this.#messageLength = message.length;
-        this.#xCoord = 80;
+        this.#complete = false;
         
         for(let i = 0; i < this.#messageLength; i++) {
             messageList.push(message[i]);
@@ -213,24 +223,27 @@ class Message {
         let message = this.#message;
         let messageList = this.#messageList;
         let mLength = this.#messageLength;
-        
 
         fill(255, 0, 0);
+        textSize(80);
+        textAlign(CENTER);
         text(messageList[current], messageX[current], this.#y);
         
-        textSize(40);
-        textAlign(CENTER);
-            
         if(newElf.checkOver()) {
-            completeScreen(messageList);
+            this.#complete = true;
         } 
     }
 
     move() {
+        let messageList = this.#messageList;
         if(this.#y < height + BLOCK_SIZE) {
             this.#y++;
         } 
-        if(this.#y > height + BLOCK_SIZE || newElf.getCaught()) {
+
+        if(this.#y > height - BLOCK_SIZE) {
+            this.#y = -BLOCK_SIZE;
+        }
+        if(newElf.getIfCaught(messageList)) {
             current++;
             this.#y = -BLOCK_SIZE;
         }
@@ -262,6 +275,10 @@ class Message {
     getMessageList() {
         return this.#messageList;
     }
+
+    getComplete() {
+        return this.#complete;
+    }
 }
 
 function setup() {
@@ -283,24 +300,29 @@ function draw() {
     textSize(75);
     noStroke();
     background(0);
+    //startGame = false;
 
     if(!gameOver) {
-        newGround.draw();
-        newElf.draw();
-        newElf.move();
-        //newElf.constraint();
-        newGround.move();
-        newMessage.draw();
-        newMessage.move();
-        fill(0, 255, 0);
-        textAlign(CORNER);
-        textSize(20);
-        text("Letters caught: " + score + " / " + (newMessage.getMessageLength() -1), 40, 50);
+        loadScreen();
+        
+        if(newElf.getComplete()) {
+            startGame = false;
+            // playAgain = false;
+            completeScreen(newMessage.getMessage());
+        }
     }
-    if (gameOver) {
-        background(0); 
-        textAlign(CENTER);  
-        text("GAME OVER", width/2, height/2);
+    if(gameOver) {
+        if(restartGame) {
+            background(0); 
+            textAlign(CENTER);  
+            text("GAME OVER", width/2, height/2);
+            button("START GAME", 0, -50, "loadScreen");
+            
+            console.log(restartGame);
+        } else {
+            newGame();
+        }
+
     } 
 }
 
@@ -318,12 +340,94 @@ function randomVal() {
     return random(BLOCK_SIZE, width - BLOCK_SIZE);
 }
 
-function completeScreen(messageList) {
-    background(0);
-    textAlign(CENTER);
-    textSize(35);
+function completeScreen(message) {
+    //completeButton = false;
+    if(startGame) {
+        resetValues();
+    } else {
+        background(0);
+        textAlign(CENTER);
+        textSize(20);
+        fill(255);
+        text("CONGRATULATIONS!", width/2, height*0.15);
+        text("You have collected the message...", width/2, height*0.2);
+        textSize(50);
+        fill(255, 0, 0);
+        text(message, width/2, height/2);
+    }
+    
+    
+    // button("PLAY AGAIN", 0, 0, "completeScreen");
 
-    let separator = " ";
-    let joinedText = join(messageList, separator);
-    text(joinedText, width/2, height/2);
+    // if(playAgain) {
+    //     newGame();
+    // }
+}
+
+function loadScreen() {
+    if(startGame) {
+        newGame();
+    } else {
+        background(0);
+        //loadButton = false;
+        newGround.draw();
+        newElf.draw();
+        fill(255);
+        textAlign(CENTER);
+        textSize(25);
+        text("Help the elf collect all the falling letters to uncover the hidden message", width/2, height*0.2, 800);
+        fill(255, 0, 0);
+        text("but beware of the candy canes...", width/2, height*0.37);
+
+        button("START GAME", 0, -150, "loadScreen");
+    }
+    
+}
+
+function newGame() {
+
+    background(0);
+    fill(0, 255, 0);
+    textAlign(CORNER);
+    textSize(30);
+    text("Letters caught: " + score + " / " + (newMessage.getMessageLength() - spaces), 40, 50);
+    newGround.draw();
+    newElf.draw();
+    newElf.move();
+    newElf.constraint();
+    newGround.move();
+    newMessage.draw();
+    newMessage.move();
+}
+
+function button(buttonLabel, xCord, yCord, functionName) {
+    if(mouseX >= width/2 + xCord - 130 && mouseX <= width/2 + xCord + 130
+    && mouseY <= (height*0.8 + yCord) + 45 && mouseY >= (height*0.8 + yCord)) {
+        if(functionName === "completeScreen") {
+            completeButton = true;
+        }
+        if(functionName === "loadScreen") {
+            loadButton = true;
+        }
+        fill(0, 255, 0);
+    } else {
+        //completeButton = false;
+        loadButton = false;
+        fill(255, 0, 0);
+    }                           
+    rectMode(CENTER);
+    rect(width/2 + xCord, height*0.835 + yCord, 260, 40);
+    fill(255);
+    textSize(30);
+    text(buttonLabel, width/2 + xCord, height*0.85 + yCord);
+}
+
+function mouseClicked() {
+    if(loadButton) {
+        startGame = true;
+        restartGame = true;
+    }
+    // if(completeButton) {
+    //     playAgain = true;
+    // } 
 }

@@ -1,5 +1,6 @@
 let elf, snow, snowman, ice, cane, xmasFont, direction;
 let YValue;
+let messageX = [];
 let levelSelect = 0;
 let score = 0;
 let current = 0;
@@ -10,10 +11,12 @@ let checkSpace = true;
 let jump = false;
 let completeButton = false;
 let loadButton = false;
-let startGame = false;
-let restartGame = false;
-let playAgain = false;
-let messageX = [];
+let playAgainButton = false;
+let pressed = false;
+
+let startGame = 0;
+let restartGame;
+let playAgain;
 
 const BLOCK_SIZE = 50;
 const GAP = 800;
@@ -164,9 +167,11 @@ class Elf {
 
     constraint() {
         let caneList = newGround.getCandyCaneX();
-        for(let i = 0; i < caneList.length; i++) {
-            if(this.#x >= caneList[i] && this.#x <= caneList[i] + BLOCK_SIZE && this.#y >= height - 2*BLOCK_SIZE) {
-                gameOver = true;
+        if(!gameOver) {
+            for(let i = 0; i < caneList.length; i++) {
+                if(this.#x >= caneList[i] && this.#x <= caneList[i] + BLOCK_SIZE && this.#y >= height - 2*BLOCK_SIZE) {
+                    gameOver = true;
+                }
             }
         }
     }
@@ -199,7 +204,7 @@ class Elf {
 
 class Message {
     #y;
-    #messageChoice = ["Hi"];
+    #messageChoice = ["A"];
     #message;
     #messageLength;
     #messageList;
@@ -287,7 +292,6 @@ function setup() {
     newElf = new Elf;
     newMessage = new Message;
     
-
     for(let i = 0; i < 20; i++) {
         messageX.push(randomVal());
     }
@@ -300,30 +304,41 @@ function draw() {
     textSize(75);
     noStroke();
     background(0);
-    //startGame = false;
+    console.log(startGame);
+    //console.log("START GAME = " + startGame);
+    gameOver = false;
+    
+    if(startGame === 0) {
+        loadScreen();
+    }
+    if(startGame === 1) {
+        newGame();
+    }
+    if(startGame === 2) {
+        overScreen();
+    }
+    if(startGame === 3) {
+        completeScreen(newMessage.getMessage());
+    }
+    if(startGame === 4) {
+        completeScreen(newMessage.getMessage());
+    }
 
     if(!gameOver) {
-        loadScreen();
-        
         if(newElf.getComplete()) {
-            startGame = false;
-            // playAgain = false;
-            completeScreen(newMessage.getMessage());
-        }
+            startGame = 3;
+        }       
     }
     if(gameOver) {
-        if(restartGame) {
-            background(0); 
-            textAlign(CENTER);  
-            text("GAME OVER", width/2, height/2);
-            button("START GAME", 0, -50, "loadScreen");
-            
-            console.log(restartGame);
-        } else {
-            newGame();
-        }
-
+        startGame = 2;
     } 
+}
+
+function overScreen() {
+    background(0); 
+    textAlign(CENTER);  
+    text("GAME OVER", width/2, height/2);
+    button("START GAME", 0, -50, "gameOver");
 }
 
 function keyPressed() {
@@ -341,51 +356,39 @@ function randomVal() {
 }
 
 function completeScreen(message) {
-    //completeButton = false;
-    if(startGame) {
-        resetValues();
-    } else {
-        background(0);
-        textAlign(CENTER);
-        textSize(20);
-        fill(255);
-        text("CONGRATULATIONS!", width/2, height*0.15);
-        text("You have collected the message...", width/2, height*0.2);
-        textSize(50);
-        fill(255, 0, 0);
-        text(message, width/2, height/2);
-    }
-    
-    
-    // button("PLAY AGAIN", 0, 0, "completeScreen");
-
-    // if(playAgain) {
-    //     newGame();
-    // }
+    completeButton = false;
+    //("COMPLETE SCREEN");
+    background(0);
+    textAlign(CENTER);
+    textSize(20);
+    fill(255);
+    text("CONGRATULATIONS!", width/2, height*0.15);
+    text("You have collected the message...", width/2, height*0.2);
+    textSize(50);
+    fill(255, 0, 0);
+    text(message, width/2, height/2);
+    button("PLAY AGAIN", 0, 0, "complete");
 }
 
 function loadScreen() {
-    if(startGame) {
-        newGame();
-    } else {
-        background(0);
-        //loadButton = false;
-        newGround.draw();
-        newElf.draw();
-        fill(255);
-        textAlign(CENTER);
-        textSize(25);
-        text("Help the elf collect all the falling letters to uncover the hidden message", width/2, height*0.2, 800);
-        fill(255, 0, 0);
-        text("but beware of the candy canes...", width/2, height*0.37);
-
-        button("START GAME", 0, -150, "loadScreen");
-    }
-    
+    loadButton = false;
+    gameOver = false;
+    //console.log("LOAD SCREEN");
+    background(0);
+    newGround.draw();
+    newElf.draw();
+    fill(255);
+    textAlign(CENTER);
+    textSize(25);
+    text("Help the elf collect all the falling letters to uncover the hidden message", width/2, height*0.2, 800);
+    fill(255, 0, 0);
+    text("but beware of the candy canes...", width/2, height*0.37);
+    button("START GAME", 0, -150, "loadScreen");
 }
 
 function newGame() {
-
+    gameOver = false;
+    //("NEW GAME");
     background(0);
     fill(0, 255, 0);
     textAlign(CORNER);
@@ -394,7 +397,7 @@ function newGame() {
     newGround.draw();
     newElf.draw();
     newElf.move();
-    newElf.constraint();
+    //newElf.constraint();
     newGround.move();
     newMessage.draw();
     newMessage.move();
@@ -403,15 +406,19 @@ function newGame() {
 function button(buttonLabel, xCord, yCord, functionName) {
     if(mouseX >= width/2 + xCord - 130 && mouseX <= width/2 + xCord + 130
     && mouseY <= (height*0.8 + yCord) + 45 && mouseY >= (height*0.8 + yCord)) {
-        if(functionName === "completeScreen") {
-            completeButton = true;
+        if(functionName === "complete") {
+            playAgainButton = true;
+        }
+        if(functionName === "gameOver") {
+            restartButton = true;
         }
         if(functionName === "loadScreen") {
             loadButton = true;
         }
         fill(0, 255, 0);
     } else {
-        //completeButton = false;
+        playAgainButton = false;
+        restartButton = false;
         loadButton = false;
         fill(255, 0, 0);
     }                           
@@ -423,11 +430,7 @@ function button(buttonLabel, xCord, yCord, functionName) {
 }
 
 function mouseClicked() {
-    if(loadButton) {
-        startGame = true;
-        restartGame = true;
+    if(loadButton || restartButton || playAgainButton) { //|| playAgainButton
+        startGame = 1;
     }
-    // if(completeButton) {
-    //     playAgain = true;
-    // } 
 }

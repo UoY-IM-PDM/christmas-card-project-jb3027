@@ -419,7 +419,7 @@ class Elf {
 
 class Message {
     #y;
-    #messageChoice = ["MERRY CHRISTMAS!"];
+    #messageChoice = ["MERRY CHRISTMAS"];
     #message;
     #messageLength;
     #messageList;
